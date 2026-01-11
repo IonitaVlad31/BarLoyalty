@@ -1,0 +1,49 @@
+# --- IDE & OS ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# --- Java / Spring Boot (Gateway) ---
+target/
+.mvn/
+mvnw
+mvnw.cmd
+*.class
+*.jar
+*.war
+*.classpath
+*.project
+*.settings/
+
+# --- C++ (QR Service) ---
+*.o
+*.obj
+
+# Biblioteci compilate
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+
+# Executabile (Windows & Linux/Mac)
+*.exe
+*.out
+*.app
+
+# Foldere si fisiere generate de CMake (Sistemul de build)
+build/
+cmake-build-debug/
+cmake-build-release/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# --- Environment Variables (SECRET MANAGEMENT) ---
+.env
+.env.local
+
+# --- Docker ---
+*.log
