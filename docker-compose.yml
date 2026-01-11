@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: bar_loyalty_db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bar-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: bar_loyalty_gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      QR_SERVICE_URL: http://qr-service:8081
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - bar-net
+
+  qr-service:
+    build:
+      context: ./qr-service
+      dockerfile: Dockerfile
+    container_name: bar_loyalty_qr
+    ports:
+      - "8081:8081"
+    networks:
+      - bar-net
+
+volumes:
+  postgres_data:
+
+networks:
+  bar-net:
+    driver: bridge
