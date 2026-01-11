@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # Serviciul 1: Baza de date PostgreSQL
   db:
     image: postgres:15-alpine
     container_name: bar_loyalty_db
@@ -8,36 +9,44 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
+    # Maparea porturilor: PC -> container
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - bar-net
+    # Healthcheck pentru a verifica dacă baza de date este gata
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # Serviciul 2: Gateway Spring Boot
   gateway:
     build:
       context: ./gateway
       dockerfile: Dockerfile
     container_name: bar_loyalty_gateway
+    # Aplicatia va fi accesibila in browser la https://localhost:8080
     ports:
       - "8080:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      # Unde va fi gasit serviciul de QR code
       QR_SERVICE_URL: http://qr-service:8081
+
+    # Gateway-ul nu porneste pana cand baza de date nu este "healthy"
     depends_on:
       db:
         condition: service_healthy
     networks:
       - bar-net
 
+  # Serviciul 3: Serviciul de generare QR code
   qr-service:
     build:
       context: ./qr-service
