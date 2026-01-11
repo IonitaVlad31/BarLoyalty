@@ -1,12 +1,16 @@
 FROM gcc:latest
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
+    git \
+    libasio-dev \
     libqrencode-dev \
     libpng-dev \
-    libboost-all-dev \
-    git
+    libboost-system-dev \
+    libboost-thread-dev \
+    libssl-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 COPY . .
 
