@@ -1,17 +1,34 @@
-### Test Login Corect
-POST http://localhost:8082/api/auth/login
+### 1. Ionut Castiga 100 de puncte (EARN)
+# Atentie: Inlocuieste "userId": 1 cu ID-ul real al userului tau din baza de date (probabil e 1)
+POST http://localhost:8082/api/transact
 Content-Type: application/json
+Authorization: Basic ionut_student parolaSecura123
 
 {
-  "username": "ionut_student",
-  "password": "parolaSecura123"
+  "userId": 1,
+  "amount": 100,
+  "type": "EARN",
+  "qrCodeHash": "CodeScanat_XYZ"
 }
 
-### Test Login Gresit (de verificare)
-POST http://localhost:8082/api/auth/login
+### 2. Ionut Cheltuie 50 de puncte (REDEEM)
+POST http://localhost:8082/api/transact
 Content-Type: application/json
+Authorization: Basic ionut_student parolaSecura123
 
 {
-  "username": "ionut_student",
-  "password": "parolaGRESITA"
+  "userId": 1,
+  "amount": 50,
+  "type": "REDEEM"
+}
+
+### 3. Ionut incearca sa cheltuie prea mult (Eroare asteptata)
+POST http://localhost:8082/api/transact
+Content-Type: application/json
+Authorization: Basic ionut_student parolaSecura123
+
+{
+  "userId": 1,
+  "amount": 9999,
+  "type": "REDEEM"
 }

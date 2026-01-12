@@ -33,8 +33,3 @@ public class Transaction {
 
     private LocalDateTime timestamp = LocalDateTime.now();
 }
-
-enum TransactionType {
-    EARN,
-    REDEEM
-}
