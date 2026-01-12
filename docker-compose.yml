@@ -6,9 +6,9 @@ services:
     image: postgres:15-alpine
     container_name: bar_loyalty_db
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1q2w3e
+      POSTGRES_DB: postgres
     # Maparea porturilor: PC -> container
     ports:
       - "5433:5432"
@@ -18,7 +18,8 @@ services:
       - bar-net
     # Healthcheck pentru a verifica dacă baza de date este gata
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      # DB_USER / DB_NAME nu sunt definite; folosim valorile reale.
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,11 +32,12 @@ services:
     container_name: bar_loyalty_gateway
     # Aplicatia va fi accesibila in browser la https://localhost:8080
     ports:
-      - "8082:8080"
+      - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
-      SPRING_DATASOURCE_USERNAME: ${DB_USER}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      # URL intern in reteaua Docker (db:5432)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1q2w3e
       # Unde va fi gasit serviciul de QR code
       QR_SERVICE_URL: http://qr-service:8081
 

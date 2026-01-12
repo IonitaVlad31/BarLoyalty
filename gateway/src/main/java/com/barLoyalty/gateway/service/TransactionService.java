@@ -22,6 +22,9 @@ public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @Transactional
     public String processTransaction(TransactionRequest request) {
         User user = userRepository.findById(request.getUserId())
@@ -49,6 +52,12 @@ public class TransactionService {
                 .build();
 
         transactionRepository.save(transaction);
+
+        try {
+            notificationService.sendBalanceUpdate(user.getId(), user.getCurrentPoints());
+        } catch (Exception e) {
+            System.err.println("Eroare la trimiterea notificarii WebSocket: " + e.getMessage());
+        }
         return "Succes! Sold nou: " + user.getCurrentPoints();
     }
 }

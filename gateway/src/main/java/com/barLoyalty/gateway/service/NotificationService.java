@@ -15,5 +15,7 @@ public class NotificationService {
     public void sendBalanceUpdate(Long userId, Integer newBalance) {
         // sends to: /topic/balance/{userId}
         messagingTemplate.convertAndSend("/topic/balance/" + userId, newBalance);
+
+        System.out.println("Notificare trimisa catre user " + userId + ": Sold nou " + newBalance);
     }
 }
