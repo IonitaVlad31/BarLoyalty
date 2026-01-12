@@ -16,12 +16,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable()) // Dezactivam CSRF pentru ca folosim API-uri (Postman/Frontend)
-            .authorizeHttpRequests(auth -> auth
-                    // Lasam acces liber la endpoint-urile de autentificare si testul QR
-                    .requestMatchers("/api/auth/**", "/api/test/**").permitAll()
-                    // Toate celelalte endpoint-uri necesita autentificare
-                    .anyRequest().authenticated()
-            )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**", "/ws/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+
                 .httpBasic(basic -> {});
         return http.build();
     }
