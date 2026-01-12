@@ -1,18 +1,27 @@
 package com.barLoyalty.gateway.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.*;
+
 import java.util.Map;
 
 @Service
 public class QrCodeService {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
-    @Value("${QR_SERVICE_URL:http://qr-service:8082}")
+    /**
+     * In Docker, qr-service ruleaza pe http://qr-service:8081
+     * Local, ruleaza pe http://localhost:8081
+     */
+    @Value("${QR_SERVICE_URL:http://qr-service:8081}")
     private String qrServiceUrl;
+
+    public QrCodeService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     public String generateQr(String data) {
         String url = qrServiceUrl + "/generate";
@@ -23,12 +32,7 @@ public class QrCodeService {
 
         HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
 
-        try {
-            ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
-            return response.getBody();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Eroare la generarea QR: " + e.getMessage();
-        }
+        ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+        return response.getBody();
     }
 }
