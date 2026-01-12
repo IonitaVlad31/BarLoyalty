@@ -1,23 +1,21 @@
-package com.barloyalty.gateway.service;
+package com.barLoyalty.gateway.service;
 
-import com.barloyalty.gateway.dto.RegisterRequest;
-import com.barloyalty.gateway.entity.Role;
-import com.barloyalty.gateway.entity.User;
-import com.barloyalty.gateway.repository.UserRepository;
+import com.barLoyalty.gateway.dto.RegisterRequest;
+import com.barLoyalty.gateway.entity.Role;
+import com.barLoyalty.gateway.entity.User;
+import com.barLoyalty.gateway.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    @Autowired
+    private UserRepository userRepository;
 
-    public AuthService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public String register(RegisterRequest request) {
         // 1. Verificam daca userul exista deja
@@ -27,7 +25,7 @@ public class AuthService {
 
         // 2. Setam rolul default
         Role userRole = Role.CLIENT;
-        if (request.getRole() != null && "BAR_ADMIN".equalsIgnoreCase(request.getRole())) {
+        if ("BAR_ADMIN".equalsIgnoreCase(request.getRole())) {
             userRole = Role.BAR_ADMIN;
         }
 
@@ -35,7 +33,7 @@ public class AuthService {
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword())) // Criptam parola
+                .password(passwordEncoder.encode(request.getPassword())) // Criptam parola!
                 .role(userRole)
                 .currentPoints(0)
                 .build();

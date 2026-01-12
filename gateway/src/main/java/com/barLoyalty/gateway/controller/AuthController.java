@@ -1,7 +1,8 @@
-==package com.barloyalty.gateway.controller;
+package com.barLoyalty.gateway.controller;
 
-import com.barloyalty.gateway.dto.RegisterRequest;
-import com.barloyalty.gateway.service.AuthService;
+import com.barLoyalty.gateway.dto.RegisterRequest;
+import com.barLoyalty.gateway.service.AuthService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,11 +10,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthService authService;
-
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
+    @Autowired
+    private AuthService authService;
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
