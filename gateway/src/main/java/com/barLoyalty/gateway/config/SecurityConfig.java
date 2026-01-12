@@ -15,21 +15,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Dezactivam CSRF pentru ca folosim API-uri (Postman/Frontend)
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // resurse statice + pagina de start
+                        // pagina + resurse statice (Spring Boot servește din classpath:/static)
                         .requestMatchers(
                                 "/",
                                 "/index.html",
                                 "/error",
                                 "/favicon.ico",
+                                "/static/**",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
-                                "/webjars/**",
-                                "/**/*.css",
-                                "/**/*.js",
-                                "/**/*.html"
+                                "/webjars/**"
                         ).permitAll()
                         .requestMatchers("/api/auth/**", "/ws/**").permitAll()
                         .anyRequest().authenticated()
