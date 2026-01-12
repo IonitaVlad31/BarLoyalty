@@ -1,5 +1,6 @@
 package com.barLoyalty.gateway.controller;
 
+import com.barLoyalty.gateway.dto.LoginRequest;
 import com.barLoyalty.gateway.dto.RegisterRequest;
 import com.barLoyalty.gateway.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,16 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
+        try {
+            String response = authService.login(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(401).body(e.getMessage());
         }
     }
 }

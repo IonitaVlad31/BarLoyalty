@@ -1,0 +1,17 @@
+### Test Login Corect
+POST http://localhost:8082/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "ionut_student",
+  "password": "parolaSecura123"
+}
+
+### Test Login Gresit (de verificare)
+POST http://localhost:8082/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "ionut_student",
+  "password": "parolaGRESITA"
+}

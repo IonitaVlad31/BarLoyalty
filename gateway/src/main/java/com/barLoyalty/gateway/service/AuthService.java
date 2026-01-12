@@ -1,5 +1,6 @@
 package com.barLoyalty.gateway.service;
 
+import com.barLoyalty.gateway.dto.LoginRequest;
 import com.barLoyalty.gateway.dto.RegisterRequest;
 import com.barLoyalty.gateway.entity.Role;
 import com.barLoyalty.gateway.entity.User;
@@ -42,5 +43,17 @@ public class AuthService {
         userRepository.save(user);
 
         return "Utilizator inregistrat cu succes: " + user.getUsername();
+    }
+
+    public String login(LoginRequest request) {
+        // 1. Cautam userul dupa username
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("Utilizatorul nu exista!"));
+        // 2. Verificam parola
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Parola incorecta!");
+        }
+
+        return "Autentificare reusita! Rol:" + user.getRole();
     }
 }
