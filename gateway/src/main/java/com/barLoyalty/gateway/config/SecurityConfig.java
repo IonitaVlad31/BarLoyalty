@@ -15,13 +15,27 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Dezactivam CSRF pentru ca folosim API-uri (Postman/Frontend)
+                .csrf(csrf -> csrf.disable()) // Dezactivam CSRF pentru ca folosim API-uri (Postman/Frontend)
                 .authorizeHttpRequests(auth -> auth
+                        // resurse statice + pagina de start
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/error",
+                                "/favicon.ico",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/webjars/**",
+                                "/**/*.css",
+                                "/**/*.js",
+                                "/**/*.html"
+                        ).permitAll()
                         .requestMatchers("/api/auth/**", "/ws/**").permitAll()
                         .anyRequest().authenticated()
                 )
-
-                .httpBasic(basic -> {});
+                .httpBasic(basic -> {
+                });
         return http.build();
     }
 
