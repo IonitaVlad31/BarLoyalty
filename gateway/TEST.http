@@ -8,11 +8,11 @@ Content-Type: application/json
   "email": "ionut@test.com"
 }
 
-### 1. Ionut Castiga 100 de puncte (EARN)
+### 2. Ionut Castiga 100 de puncte (EARN)
 # Atentie: Inlocuieste "userId": 1 cu ID-ul real al userului tau din baza de date (probabil e 1)
 POST http://localhost:8082/api/transact
 Content-Type: application/json
-Authorization: Basic ionut_student parolaSecura123
+Authorization: Basic ionut 1234
 
 {
   "userId": 1,
@@ -21,10 +21,10 @@ Authorization: Basic ionut_student parolaSecura123
   "qrCodeHash": "CodeScanat_XYZ"
 }
 
-### 2. Ionut Cheltuie 50 de puncte (REDEEM)
+### 3. Ionut Cheltuie 50 de puncte (REDEEM)
 POST http://localhost:8082/api/transact
 Content-Type: application/json
-Authorization: Basic ionut_student parolaSecura123
+Authorization: Basic ionut 1234
 
 {
   "userId": 1,
@@ -32,10 +32,10 @@ Authorization: Basic ionut_student parolaSecura123
   "type": "REDEEM"
 }
 
-### 3. Ionut incearca sa cheltuie prea mult (Eroare asteptata)
+### 4. Ionut incearca sa cheltuie prea mult (Eroare asteptata)
 POST http://localhost:8082/api/transact
 Content-Type: application/json
-Authorization: Basic ionut_student parolaSecura123
+Authorization: Basic ionut 1234
 
 {
   "userId": 1,
