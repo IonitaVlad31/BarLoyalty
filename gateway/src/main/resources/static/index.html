@@ -13,6 +13,7 @@
         .card { max-width: 400px; margin: auto; padding: 20px; }
         #dashboard { display: none; }
         #qr-reader { width: 100%; }
+        #qr-input { font-family: monospace; font-weight: bold; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -45,23 +46,32 @@
             </div>
 
             <hr>
-            <h5>Scanare QR (Camera)</h5>
+            <h5>Scanare si Tranzactii</h5>
+
             <div class="row g-3 align-items-start">
-                <div class="col-12 col-md-7">
+                <div class="col-12 col-md-6">
                     <div id="qr-reader" class="border rounded p-2 bg-white"></div>
-                    <p class="text-muted small mt-2">
-                        Notă: pentru scanare trebuie HTTPS sau http://localhost. În browser, permite accesul la cameră.
-                    </p>
-                </div>
-                <div class="col-12 col-md-5">
-                    <label class="form-label">Ultimul cod scanat</label>
-                    <input type="text" id="qr-input" class="form-control" placeholder="Codul va apărea aici...">
                     <div class="d-grid gap-2 mt-2">
-                        <button onclick="simulateScan()" class="btn btn-success">Trimite tranzacția (EARN 10)</button>
-                        <button onclick="startQrScanner()" class="btn btn-outline-secondary">Pornește / Repornește camera</button>
-                        <button onclick="stopQrScanner()" class="btn btn-outline-secondary">Oprește camera</button>
+                        <button onclick="startQrScanner()" class="btn btn-outline-primary btn-sm">Porneste Camera</button>
+                        <button onclick="stopQrScanner()" class="btn btn-outline-secondary btn-sm">Opreste Camera</button>
                     </div>
-                    <p id="scan-status" class="text-muted small mt-2"></p>
+
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Cod QR (Scanat sau Generat)</label>
+                    <input type="text" id="qr-input" class="form-control mb-3" placeholder="Codul va aparea aici...">
+                    <p class="small text-muted mb-2">Alege actiunea:</p>
+                    <div class="d-grid gap-2 mt-2">
+                        <button onclick="processTransaction('EARN', 10)" class="btn btn-success">
+                            Adauga 10 Puncte (EARN)
+                        </button>
+                        <button onclick="processTransaction('REDEEM', 10)" class="btn btn-danger">
+                            Cheltuie 10 Puncte (REDEEM)
+                        </button>
+                    </div>
+                    <p class="text-muted small mt-3">
+                        Dacă campul "Cod QR" este gol, se va genera automat un cod aleatoriu pentru testare.
+                    </p>
                 </div>
             </div>
         </div>
@@ -74,7 +84,6 @@
     let currentUserId = null;
     let stompClient = null;
 
-    // QR scanner globals
     let html5QrCode = null;
     let lastQrText = null;
 
@@ -103,9 +112,10 @@
 
             showDashboard(me.currentPoints);
             connectWebSocket();
-            await startQrScanner();
+
         } catch (e) {
-            document.getElementById("login-error").innerText = "Date incorecte sau server oprit.";
+            console.error(e);
+            document.getElementById("login-error").innerText = "Eroare de conexiune cu serverul.";
         }
     }
 
@@ -115,20 +125,21 @@
         stompClient.debug = null;
 
         stompClient.connect({}, function (frame) {
-            console.log('Conectat la WebSocket: ' + frame);
+            console.log('Conectat la WebSocket.');
 
             stompClient.subscribe('/topic/balance/' + currentUserId, function (message) {
                 const newBalance = message.body;
                 updatePoints(newBalance);
-                alert("Ai primit puncte noi! Sold: " + newBalance);
+
+                console.log("Notificare primita! Sold nou: " + newBalance);
             });
 
         }, function (error) {
-            console.log(error);
-            document.getElementById("login-error").innerText = "WebSocket eșuat (server oprit?)";
+            console.log("Eroare WebSocket:", error);
         });
     }
 
+    // --- UI HELPERS ---
     function showDashboard(initialPoints) {
         document.getElementById("login-section").style.display = "none";
         document.getElementById("dashboard").style.display = "block";
@@ -138,33 +149,57 @@
 
     function updatePoints(points) {
         const display = document.getElementById("points-display");
+
+        display.style.transition = "transform 0.2s";
+        display.style.transform = "scale(1.3)";
         display.innerText = points;
-        display.style.color = "#198754";
-        setTimeout(() => display.style.color = "black", 1000);
+
+        if(parseInt(points) > parseInt(display.innerText || 0)) {
+            display.style.color = "#198754";
+        } else {
+            display.style.color = "#dc3545";
+        }
+
+        setTimeout(() => {
+            display.style.transform = "scale(1)";
+            display.style.color = "black";
+        }, 500);
     }
 
-    async function simulateScan() {
-        const qr = document.getElementById("qr-input").value || ("test_hash_" + Math.random());
+    async function processTransaction(type, amount) {
+        let qr = document.getElementById("qr-input").value;
 
-        const response = await fetch('/api/transact', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic ' + btoa(currentUser + ':' + currentPass)
-            },
-            body: JSON.stringify({
-                userId: currentUserId,
-                amount: 10,
-                type: 'EARN',
-                qrCodeHash: qr
-            })
-        });
+        if (!qr) {
+            const randomCode = Math.floor(Math.random() * 10000);
+            qr = "TEST_" + type + "_" + randomCode;
+            document.getElementById("qr-input").value = qr;
+        }
 
-        if (response.ok) {
-            console.log("Tranzacție trimisă! Așteptăm notificarea WebSocket...");
-        } else {
-            const msg = await response.text();
-            alert("Eroare la tranzacție: " + msg);
+        console.log(`Trimitere tranzactie: ${type} ${amount} puncte. QR: ${qr}`);
+
+        try {
+            const response = await fetch('/api/transact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa(currentUser + ':' + currentPass)
+                },
+                body: JSON.stringify({
+                    userId: currentUserId,
+                    amount: amount,
+                    type: type,
+                    qrCodeHash: qr
+                })
+            });
+
+            if (response.ok) {
+                // Nu facem nimic, asteptam WebSocket-ul sa actualizeze soldul
+            } else {
+                const msg = await response.text();
+                alert("Eroare la tranzacție: " + msg);
+            }
+        } catch (e) {
+            alert("Eroare de rețea!");
         }
     }
 
@@ -176,19 +211,14 @@
             if (!html5QrCode) {
                 html5QrCode = new Html5Qrcode("qr-reader");
             }
-
-            // dacă era pornit, oprește înainte
-            if (html5QrCode && html5QrCode.isScanning) {
-                await html5QrCode.stop();
-            }
+            if (html5QrCode.isScanning) await html5QrCode.stop();
 
             const cameras = await Html5Qrcode.getCameras();
             if (!cameras || cameras.length === 0) {
-                statusEl.innerText = 'Nu am găsit cameră. Verifică permisiunile.';
+                statusEl.innerText = 'Nu s-a găsit nicio cameră.';
                 return;
             }
 
-            // alege camera "din spate" dacă există
             const backCam = cameras.find(c => (c.label || '').toLowerCase().includes('back'));
             const cameraId = (backCam || cameras[0]).id;
 
@@ -196,31 +226,22 @@
                 cameraId,
                 { fps: 10, qrbox: { width: 250, height: 250 } },
                 async (decodedText) => {
-                    // evităm spam: procesăm doar când se schimbă textul
-                    if (decodedText && decodedText !== lastQrText) {
+                    if (decodedText !== lastQrText) {
                         lastQrText = decodedText;
+
                         document.getElementById('qr-input').value = decodedText;
-                        statusEl.innerText = 'Cod detectat: ' + decodedText;
+                        statusEl.innerText = 'Cod scanat! Alege EARN sau REDEEM.';
 
-                        // oprește scanarea după un cod și trimite tranzacția
-                        try {
-                            await html5QrCode.stop();
-                        } catch (e) {
-                            // ignore
-                        }
+                        await stopQrScanner();
 
-                        await simulateScan();
                     }
                 },
-                (errorMessage) => {
-                    // prea zgomotos dacă logăm fiecare frame, păstrăm silent
-                }
+                (errorMessage) => { /* ignore logs */ }
             );
 
-            statusEl.innerText = 'Camera pornită. Scanează un QR...';
+            statusEl.innerText = 'Camera pornită. Scanează un cod...';
         } catch (e) {
-            console.error(e);
-            statusEl.innerText = 'Eroare la pornire cameră: ' + (e && e.message ? e.message : e);
+            statusEl.innerText = 'Eroare cameră: ' + e;
         }
     }
 
@@ -233,13 +254,11 @@
             statusEl.innerText = 'Camera oprită.';
         } catch (e) {
             console.error(e);
-            statusEl.innerText = 'Nu pot opri camera: ' + (e && e.message ? e.message : e);
         }
     }
 
     function logout() {
         if (stompClient) stompClient.disconnect();
-        // oprim camera ca să eliberăm device-ul
         stopQrScanner();
         location.reload();
     }

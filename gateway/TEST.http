@@ -1,3 +1,13 @@
+### 1. Inregistrare User Nou (REGISTER)
+POST http://localhost:8082/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "ionut",
+  "password": "1234",
+  "email": "ionut@test.com"
+}
+
 ### 1. Ionut Castiga 100 de puncte (EARN)
 # Atentie: Inlocuieste "userId": 1 cu ID-ul real al userului tau din baza de date (probabil e 1)
 POST http://localhost:8082/api/transact
