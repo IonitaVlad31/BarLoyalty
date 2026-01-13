@@ -2,80 +2,87 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <title>Bar Loyalty - Login</title>
+    <title>Bar Loyalty - App</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-    <!-- Scanare QR cu camera -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
     <style>
         body { background-color: #f8f9fa; padding-top: 50px; }
-        .card { max-width: 400px; margin: auto; padding: 20px; }
+        .card { max-width: 450px; margin: auto; padding: 20px; }
         #dashboard { display: none; }
-        #qr-reader { width: 100%; }
-        #qr-input { font-family: monospace; font-weight: bold; letter-spacing: 1px; }
+        #qr-reader { width: 100%; border-radius: 5px; overflow: hidden; background: #000; }
+        #qr-input { font-family: monospace; font-weight: bold; letter-spacing: 1px; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
+
     <div id="login-section" class="card shadow">
-        <h3 class="text-center mb-4">Autentificare Bar</h3>
+        <h3 class="text-center mb-4">Autentificare</h3>
         <div class="mb-3">
             <label>Username</label>
             <input type="text" id="username" class="form-control" placeholder="ex: ionut">
         </div>
         <div class="mb-3">
             <label>Parola</label>
-            <input type="password" id="password" class="form-control" placeholder="ex: 1234">
+            <input type="password" id="password" class="form-control" placeholder="••••">
         </div>
-        <button onclick="login()" class="btn btn-primary w-100">Intră în cont</button>
-        <p id="login-error" class="text-danger mt-2 text-center"></p>
+        <button onclick="login()" class="btn btn-primary w-100">Intra in cont</button>
+        <p id="login-error" class="text-danger mt-2 text-center small"></p>
     </div>
 
     <div id="dashboard">
-        <div class="card shadow" style="max-width: 700px;">
+        <div class="card shadow" style="max-width: 600px;">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3>Salut, <span id="user-display">User</span>!</h3>
-                <button onclick="logout()" class="btn btn-outline-danger btn-sm">Ieșire</button>
+                <h4>Salut, <span id="user-display" class="text-primary">User</span>!</h4>
+                <button onclick="logout()" class="btn btn-outline-danger btn-sm">Iesire</button>
             </div>
 
-            <div class="alert alert-info text-center">
-                <h5>Puncte Curente:</h5>
-                <h1 id="points-display" class="display-4 fw-bold">...</h1>
+            <div class="alert alert-light border text-center shadow-sm">
+                <p class="mb-0 text-muted">Soldul tau:</p>
+                <h1 id="points-display" class="display-3 fw-bold text-dark">0</h1>
+                <p class="mb-0 text-muted">puncte</p>
             </div>
 
             <hr>
-            <h5>Scanare si Tranzactii</h5>
 
-            <div class="row g-3 align-items-start">
+            <div class="row g-3">
                 <div class="col-12 col-md-6">
-                    <div id="qr-reader" class="border rounded p-2 bg-white"></div>
-                    <div class="d-grid gap-2 mt-2">
-                        <button onclick="startQrScanner()" class="btn btn-outline-primary btn-sm">Porneste Camera</button>
-                        <button onclick="stopQrScanner()" class="btn btn-outline-secondary btn-sm">Opreste Camera</button>
-                    </div>
-
+                    <label class="form-label fw-bold">Scanare QR</label>
+                    <div id="qr-reader"></div> <div class="d-grid gap-2 mt-2">
+                    <button onclick="startQrScanner()" class="btn btn-primary btn-sm">
+                        Porneste Camera
+                    </button>
+                    <button onclick="stopQrScanner()" class="btn btn-outline-secondary btn-sm">
+                        Opreste camera
+                    </button>
                 </div>
+                    <p id="scan-status" class="text-muted small mt-2 text-center">Camera este oprita.</p>
+                </div>
+
                 <div class="col-12 col-md-6">
-                    <label class="form-label">Cod QR (Scanat sau Generat)</label>
-                    <input type="text" id="qr-input" class="form-control mb-3" placeholder="Codul va aparea aici...">
-                    <p class="small text-muted mb-2">Alege actiunea:</p>
-                    <div class="d-grid gap-2 mt-2">
-                        <button onclick="processTransaction('EARN', 10)" class="btn btn-success">
+                    <label class="form-label fw-bold">Cod Detectat / Generat</label>
+                    <input type="text" id="qr-input" class="form-control mb-3" placeholder="...">
+
+                    <div class="d-grid gap-2">
+                        <button onclick="processTransaction('EARN', 10)" class="btn btn-success py-2">
                             Adauga 10 Puncte (EARN)
                         </button>
-                        <button onclick="processTransaction('REDEEM', 10)" class="btn btn-danger">
+                        <button onclick="processTransaction('REDEEM', 10)" class="btn btn-danger py-2">
                             Cheltuie 10 Puncte (REDEEM)
                         </button>
                     </div>
-                    <p class="text-muted small mt-3">
-                        Dacă campul "Cod QR" este gol, se va genera automat un cod aleatoriu pentru testare.
+                    <p class="small text-muted mt-2 text-center">
+                        Selecteaza actiunea dupa scanare.
                     </p>
                 </div>
             </div>
         </div>
     </div>
+
 </div>
 
 <script>
@@ -83,7 +90,6 @@
     let currentPass = null;
     let currentUserId = null;
     let stompClient = null;
-
     let html5QrCode = null;
     let lastQrText = null;
 
@@ -92,30 +98,24 @@
         const pass = document.getElementById("password").value;
         const auth = 'Basic ' + btoa(user + ':' + pass);
 
-        document.getElementById("login-error").innerText = "";
-
         try {
-            const resp = await fetch('/api/users/me', {
-                headers: { 'Authorization': auth }
-            });
-
-            if (!resp.ok) {
-                document.getElementById("login-error").innerText = "Autentificare eșuată! Verifică user/parola.";
-                return;
-            }
+            const resp = await fetch('/api/users/me', { headers: { 'Authorization': auth } });
+            if (!resp.ok) throw new Error("Login esuat");
 
             const me = await resp.json();
-
             currentUser = user;
             currentPass = pass;
             currentUserId = me.id;
 
-            showDashboard(me.currentPoints);
+            document.getElementById("login-section").style.display = "none";
+            document.getElementById("dashboard").style.display = "block";
+            document.getElementById("user-display").innerText = currentUser;
+            updatePoints(me.currentPoints);
+
             connectWebSocket();
 
         } catch (e) {
-            console.error(e);
-            document.getElementById("login-error").innerText = "Eroare de conexiune cu serverul.";
+            document.getElementById("login-error").innerText = "Date incorecte!";
         }
     }
 
@@ -124,61 +124,31 @@
         stompClient = Stomp.over(socket);
         stompClient.debug = null;
 
-        stompClient.connect({}, function (frame) {
-            console.log('Conectat la WebSocket.');
-
-            stompClient.subscribe('/topic/balance/' + currentUserId, function (message) {
-                const newBalance = message.body;
-                updatePoints(newBalance);
-
-                console.log("Notificare primita! Sold nou: " + newBalance);
+        stompClient.connect({}, function () {
+            stompClient.subscribe('/topic/balance/' + currentUserId, function (msg) {
+                updatePoints(msg.body);
             });
-
-        }, function (error) {
-            console.log("Eroare WebSocket:", error);
         });
     }
 
-    // --- UI HELPERS ---
-    function showDashboard(initialPoints) {
-        document.getElementById("login-section").style.display = "none";
-        document.getElementById("dashboard").style.display = "block";
-        document.getElementById("user-display").innerText = currentUser;
-        document.getElementById("points-display").innerText = (initialPoints ?? 0);
-    }
-
     function updatePoints(points) {
-        const display = document.getElementById("points-display");
-
-        display.style.transition = "transform 0.2s";
-        display.style.transform = "scale(1.3)";
-        display.innerText = points;
-
-        if(parseInt(points) > parseInt(display.innerText || 0)) {
-            display.style.color = "#198754";
-        } else {
-            display.style.color = "#dc3545";
-        }
-
-        setTimeout(() => {
-            display.style.transform = "scale(1)";
-            display.style.color = "black";
-        }, 500);
+        const el = document.getElementById("points-display");
+        el.innerText = points;
+        el.style.color = "#0d6efd";
+        setTimeout(() => el.style.color = "black", 500);
     }
 
     async function processTransaction(type, amount) {
-        let qr = document.getElementById("qr-input").value;
+        let qrEl = document.getElementById("qr-input");
+        let qrVal = qrEl.value;
 
-        if (!qr) {
-            const randomCode = Math.floor(Math.random() * 10000);
-            qr = "TEST_" + type + "_" + randomCode;
-            document.getElementById("qr-input").value = qr;
+        if (!qrVal || qrVal.startsWith("TEST_")) {
+            qrVal = "TEST_" + type + "_" + Math.floor(Math.random() * 1000);
+            qrEl.value = qrVal;
         }
 
-        console.log(`Trimitere tranzactie: ${type} ${amount} puncte. QR: ${qr}`);
-
         try {
-            const response = await fetch('/api/transact', {
+            await fetch('/api/transact', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -188,77 +158,61 @@
                     userId: currentUserId,
                     amount: amount,
                     type: type,
-                    qrCodeHash: qr
+                    qrCodeHash: qrVal
                 })
             });
-
-            if (response.ok) {
-                // Nu facem nimic, asteptam WebSocket-ul sa actualizeze soldul
-            } else {
-                const msg = await response.text();
-                alert("Eroare la tranzacție: " + msg);
-            }
         } catch (e) {
-            alert("Eroare de rețea!");
+            alert("Eroare retea!");
         }
     }
 
     async function startQrScanner() {
         const statusEl = document.getElementById('scan-status');
-        statusEl.innerText = 'Inițializare cameră...';
+
+        if(!statusEl) {
+            console.error("Lipseste elementul HTML cu id='scan-status'!");
+            return;
+        }
+
+        statusEl.innerText = "Se porneste camera...";
 
         try {
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("qr-reader");
-            }
-            if (html5QrCode.isScanning) await html5QrCode.stop();
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
 
             const cameras = await Html5Qrcode.getCameras();
-            if (!cameras || cameras.length === 0) {
-                statusEl.innerText = 'Nu s-a găsit nicio cameră.';
-                return;
-            }
+            if (!cameras || !cameras.length) throw new Error("Nicio camera gasita");
 
-            const backCam = cameras.find(c => (c.label || '').toLowerCase().includes('back'));
-            const cameraId = (backCam || cameras[0]).id;
+            const camId = cameras[0].id;
 
-            await html5QrCode.start(
-                cameraId,
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                async (decodedText) => {
+            await html5QrCode.start(camId, { fps: 10, qrbox: 250 },
+                (decodedText) => {
                     if (decodedText !== lastQrText) {
                         lastQrText = decodedText;
-
                         document.getElementById('qr-input').value = decodedText;
-                        statusEl.innerText = 'Cod scanat! Alege EARN sau REDEEM.';
-
-                        await stopQrScanner();
-
+                        statusEl.innerText = "Cod scanat!";
+                        stopQrScanner();
                     }
                 },
-                (errorMessage) => { /* ignore logs */ }
+                () => {}
             );
+            statusEl.innerText = "Camera activa. Scaneaza!";
 
-            statusEl.innerText = 'Camera pornită. Scanează un cod...';
         } catch (e) {
-            statusEl.innerText = 'Eroare cameră: ' + e;
+            statusEl.innerText = "Eroare: " + e;
+            alert("Eroare camera: " + e);
         }
     }
 
     async function stopQrScanner() {
         const statusEl = document.getElementById('scan-status');
-        try {
-            if (html5QrCode && html5QrCode.isScanning) {
-                await html5QrCode.stop();
-            }
-            statusEl.innerText = 'Camera oprită.';
-        } catch (e) {
-            console.error(e);
+        if(html5QrCode && html5QrCode.isScanning) {
+            await html5QrCode.stop();
+            if(statusEl) statusEl.innerText = "Camera oprita.";
         }
     }
 
     function logout() {
-        if (stompClient) stompClient.disconnect();
+        if(stompClient) stompClient.disconnect();
         stopQrScanner();
         location.reload();
     }
